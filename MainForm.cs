@@ -209,8 +209,8 @@ namespace ProjectEnc
         private void OpenProject()
         {
             this.project.SetProgress(this.progress);
-            this.projectControl.LoadProject(this.project);
             this.projectControl.Enabled = true;
+            this.projectControl.LoadProject(this.project);
 
             this.SetBarItemStatus(true);
         }

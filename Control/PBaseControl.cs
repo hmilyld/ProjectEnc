@@ -28,10 +28,13 @@ namespace ProjectEnc.Control
             this.PathTxt.Text = project.RootPath;
             this.ExePath.Text = project.ExeFile;
             this.InstallPathTxt.Text = project.PackagePath;
+            this.passwdTxt.Text = project.Password;
 
             this.SetVersion(project.ExeFile);
 
             this.RefreshFiles = refreshFiles;
+
+            this.ProjectNameTxt.ReadOnly = true;
         }
 
         private void PathTxt_Click(object sender, EventArgs e)
@@ -83,12 +86,29 @@ namespace ProjectEnc.Control
             }
         }
 
+        private void PasswdTxt_EditValueChanged(object sender, EventArgs e)
+        {
+            if (this.project != null)
+            {
+                this.project.Password = this.passwdTxt.Text;
+            }
+        }
+
+        private void InstallPathTxt_EditValueChanged(object sender, EventArgs e)
+        {
+            if (this.project != null)
+            {
+                this.project.PackagePath = this.InstallPathTxt.Text;
+            }
+        }
+
         internal Project Save()
         {
             string name = this.ProjectNameTxt.Text;
             string path = this.PathTxt.Text;
             string exePath = this.ExePath.Text;
             string installPath = this.InstallPathTxt.Text;
+            string passwd = this.passwdTxt.Text;
 
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(exePath) && !string.IsNullOrEmpty(installPath))
             {
@@ -98,7 +118,8 @@ namespace ProjectEnc.Control
                     Name = name,
                     RootPath = path,
                     ExeFile = exePath,
-                    PackagePath = installPath
+                    PackagePath = installPath,
+                    Password = passwd
                 };
                 return project;
             }

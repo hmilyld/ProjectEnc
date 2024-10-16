@@ -3,8 +3,8 @@
 
 #define MyAppName "{filename}"
 #define MyAppVersion "{version}"
-#define MyAppPublisher "河南吉吉信息技术有限公司, Inc."
-#define MyAppURL "https://www.jj-it.com/"
+#define MyAppPublisher "hmilyld"
+#define MyAppURL "https://hmilyld.com/"
 #define MyAppExeName "{filename}.exe"
 
 [Setup]
@@ -25,7 +25,7 @@ PrivilegesRequired=lowest
 OutputDir={output}
 OutputBaseFilename={filename}-安装包-{#MyAppVersion}
 ;SetupIconFile=指定icon文件路径
-Password=jjit1230456
+Password={password}
 Encryption=yes
 Compression=lzma
 SolidCompression=yes

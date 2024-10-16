@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.layoutControl1 = new DevExpress.XtraLayout.LayoutControl();
+            this.passwdTxt = new DevExpress.XtraEditors.TextEdit();
             this.ProjectNameTxt = new DevExpress.XtraEditors.TextEdit();
             this.ExeVerTxt = new DevExpress.XtraEditors.TextEdit();
             this.InstallVerTxt = new DevExpress.XtraEditors.TextEdit();
@@ -42,8 +43,10 @@
             this.layoutControlItem5 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem4 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem6 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.layoutControlItem7 = new DevExpress.XtraLayout.LayoutControlItem();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).BeginInit();
             this.layoutControl1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.passwdTxt.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ProjectNameTxt.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExeVerTxt.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.InstallVerTxt.Properties)).BeginInit();
@@ -57,10 +60,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem6)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem7)).BeginInit();
             this.SuspendLayout();
             // 
             // layoutControl1
             // 
+            this.layoutControl1.Controls.Add(this.passwdTxt);
             this.layoutControl1.Controls.Add(this.ProjectNameTxt);
             this.layoutControl1.Controls.Add(this.ExeVerTxt);
             this.layoutControl1.Controls.Add(this.InstallVerTxt);
@@ -75,6 +80,15 @@
             this.layoutControl1.Size = new System.Drawing.Size(1294, 320);
             this.layoutControl1.TabIndex = 0;
             this.layoutControl1.Text = "layoutControl1";
+            // 
+            // passwdTxt
+            // 
+            this.passwdTxt.Location = new System.Drawing.Point(829, 212);
+            this.passwdTxt.Name = "passwdTxt";
+            this.passwdTxt.Size = new System.Drawing.Size(453, 46);
+            this.passwdTxt.StyleController = this.layoutControl1;
+            this.passwdTxt.TabIndex = 11;
+            this.passwdTxt.EditValueChanged += new System.EventHandler(this.PasswdTxt_EditValueChanged);
             // 
             // ProjectNameTxt
             // 
@@ -108,9 +122,10 @@
             this.InstallPathTxt.Location = new System.Drawing.Point(192, 212);
             this.InstallPathTxt.Name = "InstallPathTxt";
             this.InstallPathTxt.Properties.ReadOnly = true;
-            this.InstallPathTxt.Size = new System.Drawing.Size(1090, 46);
+            this.InstallPathTxt.Size = new System.Drawing.Size(453, 46);
             this.InstallPathTxt.StyleController = this.layoutControl1;
             this.InstallPathTxt.TabIndex = 6;
+            this.InstallPathTxt.EditValueChanged += new System.EventHandler(this.InstallPathTxt_EditValueChanged);
             this.InstallPathTxt.Click += new System.EventHandler(this.InstallPathTxt_Click);
             // 
             // ExePath
@@ -143,7 +158,8 @@
             this.layoutControlItem3,
             this.layoutControlItem5,
             this.layoutControlItem4,
-            this.layoutControlItem6});
+            this.layoutControlItem6,
+            this.layoutControlItem7});
             this.Root.Name = "Root";
             this.Root.Size = new System.Drawing.Size(1294, 320);
             this.Root.TextVisible = false;
@@ -171,7 +187,7 @@
             this.layoutControlItem3.Control = this.InstallPathTxt;
             this.layoutControlItem3.Location = new System.Drawing.Point(0, 200);
             this.layoutControlItem3.Name = "layoutControlItem3";
-            this.layoutControlItem3.Size = new System.Drawing.Size(1274, 50);
+            this.layoutControlItem3.Size = new System.Drawing.Size(637, 50);
             this.layoutControlItem3.Text = "安装包保存路径";
             this.layoutControlItem3.TextSize = new System.Drawing.Size(168, 31);
             // 
@@ -202,6 +218,15 @@
             this.layoutControlItem6.Text = "工程名称";
             this.layoutControlItem6.TextSize = new System.Drawing.Size(168, 31);
             // 
+            // layoutControlItem7
+            // 
+            this.layoutControlItem7.Control = this.passwdTxt;
+            this.layoutControlItem7.Location = new System.Drawing.Point(637, 200);
+            this.layoutControlItem7.Name = "layoutControlItem7";
+            this.layoutControlItem7.Size = new System.Drawing.Size(637, 50);
+            this.layoutControlItem7.Text = "安装包密码";
+            this.layoutControlItem7.TextSize = new System.Drawing.Size(168, 31);
+            // 
             // PBaseControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
@@ -211,6 +236,7 @@
             this.Size = new System.Drawing.Size(1294, 320);
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).EndInit();
             this.layoutControl1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.passwdTxt.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ProjectNameTxt.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExeVerTxt.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.InstallVerTxt.Properties)).EndInit();
@@ -224,6 +250,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem5)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem6)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem7)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -244,5 +271,7 @@
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem4;
         private DevExpress.XtraEditors.TextEdit ProjectNameTxt;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem6;
+        private DevExpress.XtraEditors.TextEdit passwdTxt;
+        private DevExpress.XtraLayout.LayoutControlItem layoutControlItem7;
     }
 }

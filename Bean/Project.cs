@@ -19,6 +19,8 @@ namespace ProjectEnc.Bean
         public string RootPath { get; set; }
         public string ExeFile { get; set; }
         public string PackagePath { get; set; }
+        public string Password { get; set; }
+
         public List<string> MergeDlls { get; set; } = new List<string>();
         public List<string> PackageIgnores { get; set; } = new List<string>();
 
@@ -135,6 +137,7 @@ namespace ProjectEnc.Bean
                 content = content.Replace("{output}", PackagePath);
                 content = content.Replace("{ignore}", string.Join(",", ignoreFiles.Select(f => f.Replace($"{RootPath}\\", ""))));
                 content = content.Replace("{version}", fvi.ProductVersion);
+                content = content.Replace("{password}", Password);
 
                 return content;
             }, Encoding.GetEncoding("GB2312"));
