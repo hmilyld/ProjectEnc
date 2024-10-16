@@ -21,7 +21,11 @@ namespace ProjectEnc.Control
 
             this.groupControl2.Controls.Add(this.pBaseControl);
             this.groupControl3.Controls.Add(this.mergeControl);
-            this.groupControl4.Controls.Add(this.ignoreControl);
+
+            this.tablePanel1.SetColumn(this.ignoreControl, 0);
+            this.tablePanel1.SetRow(this.ignoreControl, 0);
+            this.tablePanel1.Controls.Add(this.ignoreControl);
+            this.groupControl4.Controls.Add(this.tablePanel1);
         }
 
         internal void LoadProject(Project project)
@@ -37,6 +41,11 @@ namespace ProjectEnc.Control
         {
             this.mergeControl.LoadProject(project);
             this.ignoreControl.LoadProject(project);
+        }
+
+        private void SelectBtn_Click(object sender, System.EventArgs e)
+        {
+            this.ignoreControl.SelectFiles(this.ExtEdit.Text);
         }
     }
 }

@@ -73,6 +73,19 @@ namespace ProjectEnc.Control
             }
         }
 
+        internal void SelectFiles(string ext)
+        {
+            foreach (TreeListNode node in this.treeList.GetNodeList())
+            {
+                string file = node.Tag.ToString();
+                string fileExt = Path.GetExtension(file);
+                if (fileExt == $".{ext}")
+                {
+                    node.Checked = !node.Checked;
+                }
+            }
+        }
+
         #region TreeList联动事件
 
         // 处理选中节点事件
