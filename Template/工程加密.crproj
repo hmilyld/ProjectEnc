@@ -1,0 +1,4 @@
+﻿<project outputDir="{path}" baseDir="{path}" xmlns="http://confuser.codeplex.com">
+	<packer id="compressor" />
+	<module path="{filename}" />
+</project>
