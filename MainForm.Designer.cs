@@ -43,6 +43,8 @@
             this.EditTemplateBtnItem = new DevExpress.XtraBars.BarButtonItem();
             this.HelpBtnItem = new DevExpress.XtraBars.BarButtonItem();
             this.bar3 = new DevExpress.XtraBars.Bar();
+            this.barStaticItem1 = new DevExpress.XtraBars.BarStaticItem();
+            this.barStaticItem2 = new DevExpress.XtraBars.BarStaticItem();
             this.barDockControlTop = new DevExpress.XtraBars.BarDockControl();
             this.barDockControlBottom = new DevExpress.XtraBars.BarDockControl();
             this.barDockControlLeft = new DevExpress.XtraBars.BarDockControl();
@@ -54,8 +56,8 @@
             this.tablePanel2 = new DevExpress.Utils.Layout.TablePanel();
             this.groupControl2 = new DevExpress.XtraEditors.GroupControl();
             this.LogEdit = new DevExpress.XtraEditors.MemoEdit();
-            this.barStaticItem1 = new DevExpress.XtraBars.BarStaticItem();
-            this.barStaticItem2 = new DevExpress.XtraBars.BarStaticItem();
+            this.OpenOutPutItem = new DevExpress.XtraBars.BarButtonItem();
+            this.OpenProjectItem = new DevExpress.XtraBars.BarButtonItem();
             ((System.ComponentModel.ISupportInitialize)(this.barManager1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tablePanel1)).BeginInit();
             this.tablePanel1.SuspendLayout();
@@ -91,9 +93,11 @@
             this.EditProjectTemplateBtnItem,
             this.OpenBtnItem,
             this.barStaticItem1,
-            this.barStaticItem2});
+            this.barStaticItem2,
+            this.OpenOutPutItem,
+            this.OpenProjectItem});
             this.barManager1.MainMenu = this.bar2;
-            this.barManager1.MaxItemId = 15;
+            this.barManager1.MaxItemId = 17;
             this.barManager1.StatusBar = this.bar3;
             // 
             // bar2
@@ -111,6 +115,8 @@
             new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.MergeBtnItem, "", true, true, true, 0, null, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph),
             new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.ProtectBtnItem, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph),
             new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.PackageBtnItem, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph),
+            new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.OpenProjectItem, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph),
+            new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.OpenOutPutItem, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph),
             new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.EditTemplateBtnItem, "", true, true, true, 0, null, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph),
             new DevExpress.XtraBars.LinkPersistInfo(DevExpress.XtraBars.BarLinkUserDefines.PaintStyle, this.HelpBtnItem, "", true, true, true, 0, null, DevExpress.XtraBars.BarItemPaintStyle.CaptionGlyph)});
             this.bar2.OptionsBar.MultiLine = true;
@@ -211,6 +217,20 @@
             this.bar3.OptionsBar.DrawDragBorder = false;
             this.bar3.OptionsBar.UseWholeRow = true;
             this.bar3.Text = "Status bar";
+            // 
+            // barStaticItem1
+            // 
+            this.barStaticItem1.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
+            this.barStaticItem1.Caption = "Copyright © 2024 Hmilyld.com. All rights reserved. ";
+            this.barStaticItem1.Id = 12;
+            this.barStaticItem1.Name = "barStaticItem1";
+            this.barStaticItem1.TextAlignment = System.Drawing.StringAlignment.Center;
+            // 
+            // barStaticItem2
+            // 
+            this.barStaticItem2.Caption = "注意：任何操作都有可能导致软件损坏，虽有备份机制，但强烈建议操作前手工备份！！！";
+            this.barStaticItem2.Id = 14;
+            this.barStaticItem2.Name = "barStaticItem2";
             // 
             // barDockControlTop
             // 
@@ -344,19 +364,21 @@
             this.LogEdit.Size = new System.Drawing.Size(1952, 152);
             this.LogEdit.TabIndex = 0;
             // 
-            // barStaticItem1
+            // OpenOutPutItem
             // 
-            this.barStaticItem1.Alignment = DevExpress.XtraBars.BarItemLinkAlignment.Right;
-            this.barStaticItem1.Caption = "Copyright © 2024 Hmilyld.com. All rights reserved. ";
-            this.barStaticItem1.Id = 12;
-            this.barStaticItem1.Name = "barStaticItem1";
-            this.barStaticItem1.TextAlignment = System.Drawing.StringAlignment.Center;
+            this.OpenOutPutItem.Caption = "打开输出目录";
+            this.OpenOutPutItem.Id = 15;
+            this.OpenOutPutItem.ImageOptions.SvgImage = ((DevExpress.Utils.Svg.SvgImage)(resources.GetObject("barButtonItem1.ImageOptions.SvgImage")));
+            this.OpenOutPutItem.Name = "OpenOutPutItem";
+            this.OpenOutPutItem.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.OpenOutPutItem_ItemClick);
             // 
-            // barStaticItem2
+            // OpenProjectItem
             // 
-            this.barStaticItem2.Caption = "注意：任何操作都有可能导致软件损坏，虽有备份机制，但强烈建议操作前手工备份！！！";
-            this.barStaticItem2.Id = 14;
-            this.barStaticItem2.Name = "barStaticItem2";
+            this.OpenProjectItem.Caption = "打开项目目录";
+            this.OpenProjectItem.Id = 16;
+            this.OpenProjectItem.ImageOptions.SvgImage = ((DevExpress.Utils.Svg.SvgImage)(resources.GetObject("barButtonItem2.ImageOptions.SvgImage")));
+            this.OpenProjectItem.Name = "OpenProjectItem";
+            this.OpenProjectItem.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.OpenProjectItem_ItemClick);
             // 
             // MainForm
             // 
@@ -418,5 +440,7 @@
         private DevExpress.XtraBars.BarButtonItem OpenBtnItem;
         private DevExpress.XtraBars.BarStaticItem barStaticItem1;
         private DevExpress.XtraBars.BarStaticItem barStaticItem2;
+        private DevExpress.XtraBars.BarButtonItem OpenProjectItem;
+        private DevExpress.XtraBars.BarButtonItem OpenOutPutItem;
     }
 }

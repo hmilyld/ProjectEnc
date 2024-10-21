@@ -49,6 +49,8 @@ namespace ProjectEnc
             this.MergeBtnItem.Enabled = status;
             this.ProtectBtnItem.Enabled = status;
             this.PackageBtnItem.Enabled = status;
+            this.OpenProjectItem.Enabled = status;
+            this.OpenOutPutItem.Enabled = status;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -194,6 +196,30 @@ namespace ProjectEnc
             if (this.project != null)
             {
                 Process.Start("explorer.exe", Path.Combine(this.ProjectPath, this.project.Name));
+            }
+            else
+            {
+                MsgHelper.Warn("当前没有打开工程");
+            }
+        }
+
+        private void OpenProjectItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        {
+            if (this.project != null)
+            {
+                Process.Start("explorer.exe", this.project.RootPath);
+            }
+            else
+            {
+                MsgHelper.Warn("当前没有打开工程");
+            }
+        }
+
+        private void OpenOutPutItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        {
+            if (this.project != null)
+            {
+                Process.Start("explorer.exe", this.project.PackagePath);
             }
             else
             {
