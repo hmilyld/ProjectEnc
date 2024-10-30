@@ -97,6 +97,7 @@
             this.ProjectNameTxt.Size = new System.Drawing.Size(1090, 46);
             this.ProjectNameTxt.StyleController = this.layoutControl1;
             this.ProjectNameTxt.TabIndex = 10;
+            this.ProjectNameTxt.EditValueChanged += new System.EventHandler(this.ProjectNameTxt_EditValueChanged);
             // 
             // ExeVerTxt
             // 

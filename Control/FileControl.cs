@@ -84,6 +84,7 @@ namespace ProjectEnc.Control
                     node.Checked = !node.Checked;
                 }
             }
+            this.UpdateSelectFiles();
         }
 
         #region TreeList联动事件

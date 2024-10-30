@@ -33,8 +33,6 @@ namespace ProjectEnc.Control
             this.SetVersion(project.ExeFile);
 
             this.RefreshFiles = refreshFiles;
-
-            this.ProjectNameTxt.ReadOnly = true;
         }
 
         private void PathTxt_Click(object sender, EventArgs e)
@@ -52,7 +50,7 @@ namespace ProjectEnc.Control
                     this.project.RootPath = path;
                     this.project.ExeFile = string.Empty;
 
-                    this.RefreshFiles.Invoke();
+                    this.RefreshFiles();
                 }
             }
         }
@@ -72,7 +70,7 @@ namespace ProjectEnc.Control
                     this.project.RootPath = Path.GetDirectoryName(file);
                     this.project.ExeFile = file;
 
-                    this.RefreshFiles.Invoke();
+                    this.RefreshFiles();
                 }
             }
         }
@@ -83,6 +81,14 @@ namespace ProjectEnc.Control
             if (!string.IsNullOrEmpty(path))
             {
                 this.InstallPathTxt.Text = path;
+            }
+        }
+
+        private void ProjectNameTxt_EditValueChanged(object sender, EventArgs e)
+        {
+            if (this.project != null)
+            {
+                this.project.Name = this.ProjectNameTxt.Text;
             }
         }
 
