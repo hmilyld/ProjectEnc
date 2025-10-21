@@ -164,9 +164,16 @@ namespace ProjectEnc
 
             if (hitInfo.Node != null)
             {
-                LoadingHelper.Show();
                 string dirName = hitInfo.Node.GetValue(0).ToString();
                 this.project = FileHelper.Deserialize<Project>(Path.Combine(this.ProjectPath, dirName, "工程.project"));
+                string file = this.project.ExeFile;
+                if (!File.Exists(file))
+                {
+                    MsgHelper.Error("主程序文件不存在，请检查！");
+                    return;
+                }
+
+                LoadingHelper.Show();
                 this.OpenProject();
                 LoadingHelper.Hide();
             }
