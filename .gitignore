@@ -364,3 +364,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /安装文件
+
+# WorkBuddy AI 本地状态（记忆/缓存，勿入库）
+.workbuddy-ai/
