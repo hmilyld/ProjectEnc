@@ -24,17 +24,61 @@ namespace ProjectEnc.Bean
         public List<string> MergeDlls { get; set; } = new List<string>();
         public List<string> PackageIgnores { get; set; } = new List<string>();
 
+        /// <summary>
+        /// 工程在磁盘上的文件夹名称。历史工程文件可能没有该字段，此时回退为 <see cref="Name"/>。
+        /// </summary>
+        public string FolderName { get; set; }
+
+        /// <summary>
+        /// 外部工具（ILMerge/ConfuserEx/Inno）执行的超时时间，超时后强制结束进程。
+        /// </summary>
+        private const int ProcessTimeoutMs = 10 * 60 * 1000;
+
         private string AppPath => AppDomain.CurrentDomain.BaseDirectory;
         private string ToolPath => Path.Combine(AppPath, "Tools");
-        private string ProjectPath => Path.Combine(AppPath, "Projects", Name);
+        private string FolderNameOrName => string.IsNullOrEmpty(FolderName) ? Name : FolderName;
+        private string ProjectPath => Path.Combine(AppPath, "Projects", FolderNameOrName);
 
         private string ExeFileName(bool ext = false) => ext ? Path.GetFileName(ExeFile) : Path.GetFileNameWithoutExtension(ExeFile);
 
         public void Init()
         {
+            this.FolderName = this.Name;
+
             Directory.CreateDirectory(ProjectPath);
             FileHelper.Serialize(Path.Combine(ProjectPath, "工程.project"), this);
             CopyTemplateFiles();
+        }
+
+        /// <summary>
+        /// 保存工程到磁盘。若工程名称发生变化，会同步重命名工程目录，保证名称与目录一致。
+        /// </summary>
+        public void Save()
+        {
+            string targetDir = Path.Combine(AppPath, "Projects", Name);
+            string currentDir = ProjectPath;
+
+            if (!string.Equals(Path.GetFullPath(currentDir), Path.GetFullPath(targetDir), StringComparison.OrdinalIgnoreCase))
+            {
+                if (Directory.Exists(targetDir))
+                {
+                    throw new InvalidOperationException($"已存在同名工程“{Name}”，请更换工程名称。");
+                }
+
+                if (Directory.Exists(currentDir))
+                {
+                    Directory.Move(currentDir, targetDir);
+                }
+
+                this.FolderName = Name;
+            }
+
+            if (!Directory.Exists(ProjectPath))
+            {
+                Directory.CreateDirectory(ProjectPath);
+            }
+
+            FileHelper.Serialize(Path.Combine(ProjectPath, "工程.project"), this);
         }
 
         private void CopyTemplateFiles()
@@ -52,18 +96,22 @@ namespace ProjectEnc.Bean
         {
             if (!MergeDlls.Any())
             {
-                progress.Report("没有需要合并的文件，无需合并");
+                Report("没有需要合并的文件，无需合并");
                 return;
             }
 
             BackUpExeFile();
 
             string exePath = Path.Combine(ToolPath, "ILMerge", "ILMerge.exe");
-            string arguments = $"/out:{ExeFile} {ExeFile} {string.Join(" ", MergeDlls)}";
+            string arguments = $"/out:{Quote(ExeFile)} {Quote(ExeFile)} {string.Join(" ", MergeDlls.Select(Quote))}";
 
             Exec(exePath, arguments, "程序合并成功");
 
-            File.Delete(Path.Combine(RootPath, $"{ExeFileName()}.pdb"));
+            string pdbPath = Path.Combine(RootPath, $"{ExeFileName()}.pdb");
+            if (File.Exists(pdbPath))
+            {
+                File.Delete(pdbPath);
+            }
         }
 
         public void Protect()
@@ -73,7 +121,7 @@ namespace ProjectEnc.Bean
             string exePath = Path.Combine(ToolPath, "ConfuserEx", "Confuser.CLI.exe");
             string configPath = GetProtectConfig();
 
-            Exec(exePath, configPath, "程序加密成功");
+            Exec(exePath, Quote(configPath), "程序加密成功");
             File.Delete(configPath);
         }
 
@@ -82,34 +130,102 @@ namespace ProjectEnc.Bean
             string exePath = Path.Combine(ToolPath, "Inno", "iscc.exe");
             string configPath = GetPackageConfig();
 
-            Exec(exePath, configPath, "安装包打包成功");
+            Exec(exePath, Quote(configPath), "安装包打包成功");
             File.Delete(configPath);
         }
 
+        /// <summary>
+        /// 执行外部工具。会等待进程结束、校验退出码，失败或超时均抛出异常，避免误报成功。
+        /// </summary>
         private void Exec(string exePath, string arguments, string successMessage)
         {
-            var process = new Process
+            if (!File.Exists(exePath))
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = exePath,
-                    Arguments = arguments,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
+                throw new FileNotFoundException($"未找到执行工具：{exePath}", exePath);
+            }
+
+            var output = new StringBuilder();
+            var error = new StringBuilder();
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = exePath,
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
-            process.Start();
-            string output = process.StandardOutput.ReadToEnd();
+            using (var process = new Process { StartInfo = startInfo })
+            {
+                process.OutputDataReceived += (sender, e) =>
+                {
+                    if (e.Data != null)
+                    {
+                        output.AppendLine(e.Data);
+                    }
+                };
+                process.ErrorDataReceived += (sender, e) =>
+                {
+                    if (e.Data != null)
+                    {
+                        error.AppendLine(e.Data);
+                    }
+                };
 
-            process.StandardInput.WriteLine();
-            process.WaitForExit();
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
-            progress.Report(output);
-            progress.Report(successMessage);
+                if (!process.WaitForExit(ProcessTimeoutMs))
+                {
+                    try
+                    {
+                        process.Kill();
+                    }
+                    catch
+                    {
+                        // 忽略结束失败，下面统一抛出超时异常
+                    }
+
+                    throw new TimeoutException($"执行超时（超过 {ProcessTimeoutMs / 1000} 秒）：{Path.GetFileName(exePath)}");
+                }
+
+                // 再次调用（无参）以确保异步输出事件已全部刷新
+                process.WaitForExit();
+
+                if (process.ExitCode != 0)
+                {
+                    string detail = error.Length > 0 ? error.ToString().Trim() : output.ToString().Trim();
+                    throw new InvalidOperationException(
+                        $"{Path.GetFileName(exePath)} 执行失败（退出码 {process.ExitCode}）。{Environment.NewLine}{detail}");
+                }
+
+                Report(output.ToString().TrimEnd());
+                Report(successMessage);
+            }
+        }
+
+        /// <summary>
+        /// 将路径包裹为单个命令行参数，避免含空格路径被拆分，并转义内部引号。
+        /// </summary>
+        private static string Quote(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return "\"\"";
+            }
+
+            return "\"" + value.Replace("\"", "\\\"") + "\"";
+        }
+
+        private void Report(string message)
+        {
+            if (progress != null && !string.IsNullOrEmpty(message))
+            {
+                progress.Report(message);
+            }
         }
 
         private string GetProtectConfig()
@@ -127,7 +243,7 @@ namespace ProjectEnc.Bean
             return CreateTempConfig("工程打包.iss", content =>
             {
                 var ignoreFiles = MergeDlls.Concat(PackageIgnores).ToList();
-                ignoreFiles.Add(Path.Combine(RootPath, $"{ExeFileName()}.bakup"));
+                ignoreFiles.Add(Path.Combine(RootPath, $"{ExeFileName()}.backup"));
 
                 var fvi = FileVersionInfo.GetVersionInfo(ExeFile);
 
@@ -157,11 +273,13 @@ namespace ProjectEnc.Bean
 
         private void BackUpExeFile()
         {
-            string backup = Path.Combine(RootPath, $"{ExeFileName()}.bakup");
-            if (!File.Exists(backup))
+            if (!File.Exists(ExeFile))
             {
-                File.Copy(ExeFile, backup, true);
+                throw new FileNotFoundException($"主程序文件不存在，无法备份：{ExeFile}", ExeFile);
             }
+
+            string backup = Path.Combine(RootPath, $"{ExeFileName()}.backup");
+            File.Copy(ExeFile, backup, true);
         }
     }
 }

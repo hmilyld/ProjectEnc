@@ -95,8 +95,15 @@ namespace ProjectEnc
         {
             if (this.project != null)
             {
-                FileHelper.Serialize(Path.Combine(this.ProjectPath, this.project.Name, "工程.project"), this.project);
-                MsgHelper.Show("工程保存成功");
+                try
+                {
+                    this.project.Save();
+                    MsgHelper.Show("工程保存成功");
+                }
+                catch (Exception ex)
+                {
+                    MsgHelper.Error(ex);
+                }
             }
         }
 

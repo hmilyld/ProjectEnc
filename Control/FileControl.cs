@@ -155,7 +155,13 @@ namespace ProjectEnc.Control
 
             foreach (TreeListNode node in treeList.GetAllCheckedNodes())
             {
-                this.list.Add((string)node.Tag);
+                string path = node.Tag as string;
+
+                // 仅收集真实文件，避免目录路径混入合并/排除列表
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                {
+                    this.list.Add(path);
+                }
             }
         }
 
