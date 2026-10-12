@@ -3,19 +3,23 @@ using ProjectEnc.Bean;
 using ProjectEnc.Control;
 using ProjectEnc.Form;
 using ProjectEnc.Helper;
+using ProjectEnc.Service;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ProjectEnc
 {
     public partial class MainForm : DevExpress.XtraEditors.XtraForm
     {
-        private readonly string ProjectPath = Path.Combine(FileHelper.GetCurrentPath(), "Projects");
+        private readonly string projectRootPath = Path.Combine(FileHelper.GetCurrentPath(), AppConstants.ProjectsFolder);
 
         private readonly ProjectControl projectControl = new ProjectControl();
+
+        private readonly ProjectService projectService = new ProjectService();
 
         private readonly IProgress<string> progress;
 
@@ -55,9 +59,9 @@ namespace ProjectEnc
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            if (!Directory.Exists(this.ProjectPath))
+            if (!Directory.Exists(this.projectRootPath))
             {
-                Directory.CreateDirectory(this.ProjectPath);
+                Directory.CreateDirectory(this.projectRootPath);
             }
 
             this.LoadProjects();
@@ -66,11 +70,12 @@ namespace ProjectEnc
         private void LoadProjects()
         {
             this.treeList.Nodes.Clear();
-            string[] dirs = Directory.GetDirectories(this.ProjectPath);
+            string[] dirs = Directory.GetDirectories(this.projectRootPath);
 
             foreach (var dir in dirs)
             {
-                string dirName = Path.GetFileNameWithoutExtension(dir);
+                // 使用完整目录名，避免工程名含“.”时被 GetFileNameWithoutExtension 截断
+                string dirName = Path.GetFileName(dir);
                 this.treeList.AppendNode(new object[] { dirName }, -1);
             }
             this.treeList.ExpandAll();
@@ -129,7 +134,7 @@ namespace ProjectEnc
                 foreach (var node in selectedNodes)
                 {
                     string dirName = node.GetValue(0).ToString();
-                    FileHelper.Delete(Path.Combine(this.ProjectPath, dirName));
+                    FileHelper.Delete(Path.Combine(this.projectRootPath, dirName));
                 }
 
                 MsgHelper.Success();
@@ -141,55 +146,37 @@ namespace ProjectEnc
             }
         }
 
-        private void MergeBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private async void MergeBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            LoadingHelper.Show();
-            try
+            if (this.project == null)
             {
-                this.project.Merge();
+                MsgHelper.Warn("当前没有打开工程");
+                return;
             }
-            catch (Exception ex)
-            {
-                MsgHelper.Error(ex);
-            }
-            finally
-            {
-                LoadingHelper.Hide();
-            }
+
+            await this.RunWithLoadingAsync(() => this.projectService.MergeAsync(this.project, this.progress));
         }
 
-        private void ProtectBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private async void ProtectBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            LoadingHelper.Show();
-            try
+            if (this.project == null)
             {
-                this.project.Protect();
+                MsgHelper.Warn("当前没有打开工程");
+                return;
             }
-            catch (Exception ex)
-            {
-                MsgHelper.Error(ex);
-            }
-            finally
-            {
-                LoadingHelper.Hide();
-            }
+
+            await this.RunWithLoadingAsync(() => this.projectService.ProtectAsync(this.project, this.progress));
         }
 
-        private void PackageBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
+        private async void PackageBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            LoadingHelper.Show();
-            try
+            if (this.project == null)
             {
-                this.project.Package();
+                MsgHelper.Warn("当前没有打开工程");
+                return;
             }
-            catch (Exception ex)
-            {
-                MsgHelper.Error(ex);
-            }
-            finally
-            {
-                LoadingHelper.Hide();
-            }
+
+            await this.RunWithLoadingAsync(() => this.projectService.PackageAsync(this.project, this.progress));
         }
 
         private void TreeList_DoubleClick(object sender, EventArgs e)
@@ -199,14 +186,14 @@ namespace ProjectEnc
             if (hitInfo.Node != null)
             {
                 string dirName = hitInfo.Node.GetValue(0).ToString();
-                this.project = ProjectSerializer.Load(Path.Combine(this.ProjectPath, dirName, "工程.project"));
+                this.project = ProjectSerializer.Load(Path.Combine(this.projectRootPath, dirName, AppConstants.ProjectFileName));
                 if (this.project == null)
                 {
                     MsgHelper.Error("工程文件不存在或已损坏，无法打开。");
                     return;
                 }
-                string file = this.project.ExeFile;
-                if (!File.Exists(file))
+
+                if (!File.Exists(this.project.ExeFile))
                 {
                     MsgHelper.Error("主程序文件不存在，请检查！");
                     return;
@@ -228,7 +215,7 @@ namespace ProjectEnc
         {
             if (this.project != null)
             {
-                DialogEditFileForm form = new DialogEditFileForm(this.project.Name);
+                DialogEditFileForm form = new DialogEditFileForm(this.project.FolderNameOrName);
                 form.ShowDialog();
             }
             else
@@ -245,38 +232,17 @@ namespace ProjectEnc
 
         private void OpenBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            if (this.project != null)
-            {
-                Process.Start("explorer.exe", Path.Combine(this.ProjectPath, this.project.Name));
-            }
-            else
-            {
-                MsgHelper.Warn("当前没有打开工程");
-            }
+            this.OpenDirectory(() => Path.Combine(this.projectRootPath, this.project.FolderNameOrName));
         }
 
         private void OpenProjectItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            if (this.project != null)
-            {
-                Process.Start("explorer.exe", this.project.RootPath);
-            }
-            else
-            {
-                MsgHelper.Warn("当前没有打开工程");
-            }
+            this.OpenDirectory(() => this.project.RootPath);
         }
 
         private void OpenOutPutItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            if (this.project != null)
-            {
-                Process.Start("explorer.exe", this.project.PackagePath);
-            }
-            else
-            {
-                MsgHelper.Warn("当前没有打开工程");
-            }
+            this.OpenDirectory(() => this.project.PackagePath);
         }
 
         private void HelpBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
@@ -286,11 +252,51 @@ namespace ProjectEnc
 
         private void OpenProject()
         {
-            this.project.SetProgress(this.progress);
             this.projectControl.Enabled = true;
             this.projectControl.LoadProject(this.project);
 
             this.SetBarItemStatus(true);
+        }
+
+        /// <summary>
+        /// 打开资源管理器定位到指定目录；未打开工程或目录不存在时给出提示。
+        /// </summary>
+        private void OpenDirectory(Func<string> pathSelector)
+        {
+            if (this.project == null)
+            {
+                MsgHelper.Warn("当前没有打开工程");
+                return;
+            }
+
+            string path = pathSelector();
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            {
+                MsgHelper.Warn("目录不存在");
+                return;
+            }
+
+            Process.Start("explorer.exe", ProcessRunner.Quote(path));
+        }
+
+        /// <summary>
+        /// 在加载遮罩下执行异步操作，统一处理异常并保证遮罩关闭。
+        /// </summary>
+        private async Task RunWithLoadingAsync(Func<Task> action)
+        {
+            LoadingHelper.Show();
+            try
+            {
+                await action();
+            }
+            catch (Exception ex)
+            {
+                MsgHelper.Error(ex);
+            }
+            finally
+            {
+                LoadingHelper.Hide();
+            }
         }
 
         private void ReportProgress(string info)

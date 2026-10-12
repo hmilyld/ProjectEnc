@@ -1,26 +1,47 @@
 ﻿using DevExpress.XtraTreeList.Nodes;
 using ProjectEnc.Bean;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
 namespace ProjectEnc.Control
 {
+    /// <summary>文件列表用途。</summary>
+    public enum FileListKind
+    {
+        /// <summary>待合并类库列表。</summary>
+        Merge,
+
+        /// <summary>安装文件打包排除列表。</summary>
+        Ignore
+    }
+
     public partial class FileControl : DevExpress.XtraEditors.XtraUserControl
     {
+        private readonly FileListKind kind;
+
+        /// <summary>指向工程模型中的目标列表（作为输出）。</summary>
+        private List<string> selectedList = new List<string>();
+
+        /// <summary>选中路径的快速查找集合，替代 List.Contains 的 O(n) 线性查找。</summary>
+        private readonly HashSet<string> selectedLookup = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>联动过程中置位，用于阻止 AfterCheckNode 事件递归。</summary>
+        private bool propagating;
+
+        /// <summary>批量勾选期间置位，期间跳过列表重建。</summary>
+        private bool batchUpdating;
+
         private Project project;
 
-        private List<string> list = new List<string>();
-
-        private readonly string type;
-
-        public FileControl(string type)
+        public FileControl(FileListKind kind)
         {
             InitializeComponent();
 
             this.Dock = DockStyle.Fill;
 
-            this.type = type;
+            this.kind = kind;
 
             this.treeList.OptionsSelection.MultiSelect = true;
             this.treeList.OptionsView.ShowCheckBoxes = true;
@@ -34,7 +55,18 @@ namespace ProjectEnc.Control
         {
             this.project = project;
 
-            this.list = type == "merge" ? this.project.MergeDlls : this.project.PackageIgnores;
+            this.selectedList = this.kind == FileListKind.Merge
+                ? this.project.MergeDlls
+                : this.project.PackageIgnores;
+
+            this.selectedLookup.Clear();
+            foreach (string path in this.selectedList)
+            {
+                if (!string.IsNullOrEmpty(path))
+                {
+                    this.selectedLookup.Add(path);
+                }
+            }
 
             this.treeList.Nodes.Clear();
             this.LoadDirectoryToTreeList(project.RootPath, null);
@@ -42,48 +74,63 @@ namespace ProjectEnc.Control
 
         private void LoadDirectoryToTreeList(string folderPath, TreeListNode parentNode)
         {
-            string[] directories = Directory.GetDirectories(folderPath);
-            foreach (string directory in directories)
+            foreach (string directory in Directory.GetDirectories(folderPath))
             {
-                string dirName = Path.GetFileName(directory);
-                TreeListNode dirNode = treeList.AppendNode(new object[] { dirName }, parentNode);
+                TreeListNode dirNode = treeList.AppendNode(new object[] { Path.GetFileName(directory) }, parentNode);
                 dirNode.ImageIndex = 0;
                 dirNode.SelectImageIndex = 0;
                 dirNode.Tag = directory;
+
                 LoadDirectoryToTreeList(directory, dirNode);
 
-                if (this.list.Contains(directory))
+                if (this.selectedLookup.Contains(directory))
                 {
                     dirNode.Checked = true;
                 }
             }
-            string[] files = Directory.GetFiles(folderPath);
-            foreach (string file in files)
+
+            foreach (string file in Directory.GetFiles(folderPath))
             {
-                string fileName = Path.GetFileName(file);
-                TreeListNode fileNode = treeList.AppendNode(new object[] { fileName }, parentNode);
+                TreeListNode fileNode = treeList.AppendNode(new object[] { Path.GetFileName(file) }, parentNode);
                 fileNode.ImageIndex = 1;
                 fileNode.SelectImageIndex = 1;
                 fileNode.Tag = file;
 
-                if (this.list.Contains(file))
+                if (this.selectedLookup.Contains(file))
                 {
                     fileNode.Checked = true;
                 }
             }
         }
 
+        /// <summary>
+        /// 按后缀名批量切换勾选状态（如 "dll" 或 ".dll"）。
+        /// </summary>
         internal void SelectFiles(string ext)
         {
-            foreach (TreeListNode node in this.treeList.GetNodeList())
+            ext = (ext ?? string.Empty).Trim().TrimStart('.');
+            if (ext.Length == 0)
             {
-                string file = node.Tag.ToString();
-                string fileExt = Path.GetExtension(file);
-                if (fileExt == $".{ext}")
+                return;
+            }
+
+            this.batchUpdating = true;
+            try
+            {
+                foreach (TreeListNode node in this.treeList.GetNodeList())
                 {
-                    node.Checked = !node.Checked;
+                    string file = node.Tag as string;
+                    if (!string.IsNullOrEmpty(file) && Path.GetExtension(file) == $".{ext}")
+                    {
+                        node.Checked = !node.Checked;
+                    }
                 }
             }
+            finally
+            {
+                this.batchUpdating = false;
+            }
+
             this.UpdateSelectFiles();
         }
 
@@ -92,18 +139,35 @@ namespace ProjectEnc.Control
         // 处理选中节点事件
         private void TreeList_AfterCheckNode(object sender, DevExpress.XtraTreeList.NodeEventArgs e)
         {
-            // 阻止事件递归
-            treeList.BeginUpdate();
+            // 阻止联动过程中的事件递归
+            if (this.propagating)
+            {
+                return;
+            }
 
-            // 向下联动 - 选中所有子节点
-            CheckAllChildNodes(e.Node, e.Node.CheckState);
+            this.propagating = true;
+            try
+            {
+                treeList.BeginUpdate();
 
-            // 向上联动 - 更新父节点状态
-            CheckParentNodes(e.Node.ParentNode, e.Node.CheckState);
+                // 向下联动 - 选中所有子节点
+                CheckAllChildNodes(e.Node, e.Node.CheckState);
 
-            treeList.EndUpdate();
+                // 向上联动 - 更新父节点状态
+                CheckParentNodes(e.Node.ParentNode, e.Node.CheckState);
 
-            this.UpdateSelectFiles();
+                treeList.EndUpdate();
+            }
+            finally
+            {
+                this.propagating = false;
+            }
+
+            // 批量勾选期间只更新一次列表
+            if (!this.batchUpdating)
+            {
+                this.UpdateSelectFiles();
+            }
         }
 
         private void CheckParentNodes(TreeListNode node, CheckState check)
@@ -151,7 +215,7 @@ namespace ProjectEnc.Control
 
         private void UpdateSelectFiles()
         {
-            this.list.Clear();
+            this.selectedList.Clear();
 
             foreach (TreeListNode node in treeList.GetAllCheckedNodes())
             {
@@ -160,7 +224,7 @@ namespace ProjectEnc.Control
                 // 仅收集真实文件，避免目录路径混入合并/排除列表
                 if (!string.IsNullOrEmpty(path) && File.Exists(path))
                 {
-                    this.list.Add(path);
+                    this.selectedList.Add(path);
                 }
             }
         }

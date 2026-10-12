@@ -7,9 +7,9 @@ namespace ProjectEnc.Control
     {
         private readonly PBaseControl pBaseControl = new PBaseControl();
 
-        private readonly FileControl mergeControl = new FileControl("merge");
+        private readonly FileControl mergeControl = new FileControl(FileListKind.Merge);
 
-        private readonly FileControl ignoreControl = new FileControl("ignore");
+        private readonly FileControl ignoreControl = new FileControl(FileListKind.Ignore);
 
         private Project project;
 

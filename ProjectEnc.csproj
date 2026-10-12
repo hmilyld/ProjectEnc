@@ -111,6 +111,10 @@
     <Compile Include="Helper\CryptoHelper.cs" />
     <Compile Include="Helper\LogHelper.cs" />
     <Compile Include="Helper\ProjectSerializer.cs" />
+    <Compile Include="Helper\AppConstants.cs" />
+    <Compile Include="Helper\ProcessRunner.cs" />
+    <Compile Include="Helper\TemplateRenderer.cs" />
+    <Compile Include="Service\ProjectService.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

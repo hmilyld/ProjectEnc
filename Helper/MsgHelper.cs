@@ -38,11 +38,6 @@ namespace ProjectEnc.Helper
             XtraMessageBox.Show(text, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        public static DialogResult Confirm(string text)
-        {
-            return XtraMessageBox.Show(text, "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-        }
-
         public static DialogResult ConfirmDelete()
         {
             return XtraMessageBox.Show("确定要删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question);

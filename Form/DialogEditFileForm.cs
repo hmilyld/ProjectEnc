@@ -1,32 +1,32 @@
 ﻿using ProjectEnc.Helper;
 using System;
 using System.IO;
-using System.Text;
 
 namespace ProjectEnc.Form
 {
     public partial class DialogEditFileForm : DevExpress.XtraEditors.XtraForm
     {
-        private readonly string projectName;
+        private readonly string folderName;
 
         private string protectPath, packagePath;
 
-        public DialogEditFileForm(string projectName = null)
+        /// <param name="folderName">工程文件夹名；为 null 时编辑软件默认模板。</param>
+        public DialogEditFileForm(string folderName = null)
         {
             InitializeComponent();
 
-            this.projectName = projectName;
+            this.folderName = folderName;
         }
 
         private void DialogEditFileForm_Load(object sender, EventArgs e)
         {
             string basePath = FileHelper.GetCurrentPath();
-            string templateDir = this.projectName == null
-                ? Path.Combine(basePath, "Template")
-                : Path.Combine(basePath, "Projects", this.projectName);
+            string templateDir = string.IsNullOrEmpty(this.folderName)
+                ? Path.Combine(basePath, AppConstants.TemplateFolder)
+                : Path.Combine(basePath, AppConstants.ProjectsFolder, this.folderName);
 
-            protectPath = Path.Combine(templateDir, "工程加密.crproj");
-            packagePath = Path.Combine(templateDir, "工程打包.iss");
+            protectPath = Path.Combine(templateDir, AppConstants.ConfuserTemplateFile);
+            packagePath = Path.Combine(templateDir, AppConstants.InnoTemplateFile);
 
             try
             {
