@@ -43,10 +43,19 @@ namespace ProjectEnc.Bean
 
         public void Init()
         {
+            EnsureNameValid();
+
             this.FolderName = this.Name;
 
+            if (Directory.Exists(ProjectPath) && Directory.EnumerateFileSystemEntries(ProjectPath).Any())
+            {
+                throw new InvalidOperationException($"已存在同名工程“{Name}”，请更换工程名称。");
+            }
+
+            EnsureInsideProjectsRoot(ProjectPath);
+
             Directory.CreateDirectory(ProjectPath);
-            FileHelper.Serialize(Path.Combine(ProjectPath, "工程.project"), this);
+            ProjectSerializer.Save(this, Path.Combine(ProjectPath, "工程.project"));
             CopyTemplateFiles();
         }
 
@@ -55,7 +64,10 @@ namespace ProjectEnc.Bean
         /// </summary>
         public void Save()
         {
+            EnsureNameValid();
+
             string targetDir = Path.Combine(AppPath, "Projects", Name);
+            EnsureInsideProjectsRoot(targetDir);
             string currentDir = ProjectPath;
 
             if (!string.Equals(Path.GetFullPath(currentDir), Path.GetFullPath(targetDir), StringComparison.OrdinalIgnoreCase))
@@ -78,7 +90,71 @@ namespace ProjectEnc.Bean
                 Directory.CreateDirectory(ProjectPath);
             }
 
-            FileHelper.Serialize(Path.Combine(ProjectPath, "工程.project"), this);
+            ProjectSerializer.Save(this, Path.Combine(ProjectPath, "工程.project"));
+        }
+
+        /// <summary>
+        /// 校验工程名称是否合法，非法时通过 <paramref name="error"/> 返回原因。
+        /// </summary>
+        public static bool IsValidName(string name, out string error)
+        {
+            error = null;
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                error = "工程名称不能为空。";
+                return false;
+            }
+
+            if (name != name.Trim())
+            {
+                error = "工程名称不能以空格开头或结尾。";
+                return false;
+            }
+
+            if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                error = "工程名称包含非法字符。";
+                return false;
+            }
+
+            if (name.Contains(".."))
+            {
+                error = "工程名称不能包含“..”。";
+                return false;
+            }
+
+            if (name.Length > 100)
+            {
+                error = "工程名称过长（最多 100 个字符）。";
+                return false;
+            }
+
+            return true;
+        }
+
+        private void EnsureNameValid()
+        {
+            string error;
+            if (!IsValidName(Name, out error))
+            {
+                throw new InvalidOperationException(error);
+            }
+        }
+
+        /// <summary>
+        /// 校验路径必须位于程序的 Projects 目录内，防止路径穿越。
+        /// </summary>
+        private void EnsureInsideProjectsRoot(string path)
+        {
+            string root = Path.GetFullPath(Path.Combine(AppPath, "Projects"));
+            string full = Path.GetFullPath(path);
+
+            if (!full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(full, root, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("工程路径超出允许范围。");
+            }
         }
 
         private void CopyTemplateFiles()
@@ -256,7 +332,7 @@ namespace ProjectEnc.Bean
                 content = content.Replace("{password}", Password);
 
                 return content;
-            }, Encoding.GetEncoding("GB2312"));
+            }, FileHelper.InnoTemplateEncoding);
         }
 
         private string CreateTempConfig(string filename, Func<string, string> contentModifier, Encoding encoding = null)
@@ -264,9 +340,9 @@ namespace ProjectEnc.Bean
             string configPath = Path.Combine(ProjectPath, filename);
             string tempConfigPath = Path.Combine(ProjectPath, $"{Path.GetFileNameWithoutExtension(filename)}-临时{Path.GetExtension(filename)}");
 
-            string content = File.ReadAllText(configPath, encoding ?? Encoding.UTF8);
+            string content = File.ReadAllText(configPath, encoding ?? FileHelper.ConfuserTemplateEncoding);
             content = contentModifier(content);
-            File.WriteAllText(tempConfigPath, content, encoding ?? Encoding.UTF8);
+            File.WriteAllText(tempConfigPath, content, encoding ?? FileHelper.ConfuserTemplateEncoding);
 
             return tempConfigPath;
         }

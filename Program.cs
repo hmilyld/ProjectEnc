@@ -1,6 +1,7 @@
 ﻿using ProjectEnc.Helper;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ProjectEnc
@@ -21,6 +22,8 @@ namespace ProjectEnc
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += Application_ThreadException;
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -29,7 +32,20 @@ namespace ProjectEnc
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
+            LogHelper.Error(e.Exception);
             MsgHelper.Error(e.Exception);
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            LogHelper.Error(e.ExceptionObject as Exception);
+            MsgHelper.Error(e.ExceptionObject as Exception);
+        }
+
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            LogHelper.Error(e.Exception);
+            e.SetObserved();
         }
     }
 }

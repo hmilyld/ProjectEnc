@@ -23,7 +23,12 @@ namespace ProjectEnc.Helper
 
         public static void Error(Exception ex)
         {
-            string text = string.Format("系统错误，错误异常提示：{0}\n{1}", ex.Message, ex.StackTrace);
+            LogHelper.Error(ex);
+
+            string text = ex == null
+                ? "发生未知错误，详情请查看程序目录下的 Logs 日志。"
+                : $"操作失败：{ex.Message}{Environment.NewLine}详情请查看程序目录下的 Logs 日志。";
+
             XtraMessageBox.Show(text, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 

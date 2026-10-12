@@ -1,5 +1,7 @@
 ﻿using ProjectEnc.Bean;
 using ProjectEnc.Control;
+using ProjectEnc.Helper;
+using System;
 using System.Windows.Forms;
 
 namespace ProjectEnc.Form
@@ -21,7 +23,15 @@ namespace ProjectEnc.Form
             this.Project = this.pBaseControl.Save();
             if (this.Project != null)
             {
-                this.Project.Init();
+                try
+                {
+                    this.Project.Init();
+                }
+                catch (Exception ex)
+                {
+                    MsgHelper.Error(ex);
+                    return;
+                }
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();

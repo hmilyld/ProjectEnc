@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 
 namespace ProjectEnc.Helper
 {
@@ -14,6 +15,12 @@ namespace ProjectEnc.Helper
         {
             return AppDomain.CurrentDomain.BaseDirectory;
         }
+
+        /// <summary>ConfuserEx 工程模板（.crproj）使用的编码。</summary>
+        public static readonly Encoding ConfuserTemplateEncoding = Encoding.UTF8;
+
+        /// <summary>Inno Setup 打包模板（.iss）使用的编码。</summary>
+        public static readonly Encoding InnoTemplateEncoding = Encoding.GetEncoding("GB2312");
 
         /// <summary>
         /// 删除一个路径
@@ -78,16 +85,18 @@ namespace ProjectEnc.Helper
         }
 
         /// <summary>
-        /// 序列化对象到本地二进制文件
+        /// 序列化对象到本地二进制文件。
         /// </summary>
         /// <param name="fileName"></param>
         /// <param name="obj"></param>
+        [Obsolete("二进制序列化已弃用，请改用 ProjectSerializer。")]
         public static void Serialize(string fileName, Object obj)
         {
-            FileStream fs = new FileStream(fileName, FileMode.Create);
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(fs, obj);
-            fs.Close();
+            using (FileStream fs = new FileStream(fileName, FileMode.Create))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(fs, obj);
+            }
         }
 
         /// <summary>
@@ -97,13 +106,14 @@ namespace ProjectEnc.Helper
         /// <param name="fileName"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
+        [Obsolete("二进制反序列化已弃用，请改用 ProjectSerializer。")]
         public static T Deserialize<T>(string fileName)
         {
-            FileStream fs = new FileStream(fileName, FileMode.Open);
-            BinaryFormatter bf = new BinaryFormatter();
-            T obj = (T)bf.Deserialize(fs);
-            fs.Close();
-            return obj;
+            using (FileStream fs = new FileStream(fileName, FileMode.Open))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                return (T)bf.Deserialize(fs);
+            }
         }
     }
 }

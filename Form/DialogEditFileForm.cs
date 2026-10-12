@@ -21,27 +21,40 @@ namespace ProjectEnc.Form
         private void DialogEditFileForm_Load(object sender, EventArgs e)
         {
             string basePath = FileHelper.GetCurrentPath();
-            if (this.projectName == null)
+            string templateDir = this.projectName == null
+                ? Path.Combine(basePath, "Template")
+                : Path.Combine(basePath, "Projects", this.projectName);
+
+            protectPath = Path.Combine(templateDir, "工程加密.crproj");
+            packagePath = Path.Combine(templateDir, "工程打包.iss");
+
+            try
             {
-                // 读取软件默认配置文件
-                protectPath = Path.Combine(basePath, "Template", "工程加密.crproj");
-                packagePath = Path.Combine(basePath, "Template", "工程打包.iss");
+                this.ProtectEdit.Text = File.Exists(protectPath)
+                    ? File.ReadAllText(protectPath, FileHelper.ConfuserTemplateEncoding)
+                    : string.Empty;
+                this.PackageEdit.Text = File.Exists(packagePath)
+                    ? File.ReadAllText(packagePath, FileHelper.InnoTemplateEncoding)
+                    : string.Empty;
             }
-            else
+            catch (Exception ex)
             {
-                // 读取工程配置文件
-                protectPath = Path.Combine(basePath, "Projects", this.projectName, "工程加密.crproj");
-                packagePath = Path.Combine(basePath, "Projects", this.projectName, "工程打包.iss");
+                MsgHelper.Error(ex);
             }
-            this.ProtectEdit.Text = File.ReadAllText(protectPath);
-            this.PackageEdit.Text = File.ReadAllText(packagePath, Encoding.GetEncoding("GB2312"));
         }
 
         private void SaveBtn_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            File.WriteAllText(this.protectPath, this.ProtectEdit.Text);
-            File.WriteAllText(this.packagePath, this.PackageEdit.Text, Encoding.GetEncoding("GB2312"));
-            MsgHelper.Success();
+            try
+            {
+                File.WriteAllText(this.protectPath, this.ProtectEdit.Text, FileHelper.ConfuserTemplateEncoding);
+                File.WriteAllText(this.packagePath, this.PackageEdit.Text, FileHelper.InnoTemplateEncoding);
+                MsgHelper.Success();
+            }
+            catch (Exception ex)
+            {
+                MsgHelper.Error(ex);
+            }
         }
     }
 }

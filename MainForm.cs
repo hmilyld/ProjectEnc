@@ -109,17 +109,35 @@ namespace ProjectEnc
 
         private void DelBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
-            if (MsgHelper.ConfirmDelete() == DialogResult.Yes)
-            {
-                var selectedNodes = this.treeList.GetNodeList().ToList().Where(node => node.CheckState == CheckState.Checked);
+            var selectedNodes = this.treeList.GetNodeList().ToList()
+                .Where(node => node.CheckState == CheckState.Checked)
+                .ToList();
 
+            if (!selectedNodes.Any())
+            {
+                MsgHelper.Warn("请先勾选要删除的工程");
+                return;
+            }
+
+            if (MsgHelper.ConfirmDelete() != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
                 foreach (var node in selectedNodes)
                 {
                     string dirName = node.GetValue(0).ToString();
                     FileHelper.Delete(Path.Combine(this.ProjectPath, dirName));
                 }
+
                 MsgHelper.Success();
                 this.LoadProjects();
+            }
+            catch (Exception ex)
+            {
+                MsgHelper.Error(ex);
             }
         }
 
@@ -134,7 +152,10 @@ namespace ProjectEnc
             {
                 MsgHelper.Error(ex);
             }
-            LoadingHelper.Hide();
+            finally
+            {
+                LoadingHelper.Hide();
+            }
         }
 
         private void ProtectBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
@@ -148,7 +169,10 @@ namespace ProjectEnc
             {
                 MsgHelper.Error(ex);
             }
-            LoadingHelper.Hide();
+            finally
+            {
+                LoadingHelper.Hide();
+            }
         }
 
         private void PackageBtnItem_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
@@ -162,7 +186,10 @@ namespace ProjectEnc
             {
                 MsgHelper.Error(ex);
             }
-            LoadingHelper.Hide();
+            finally
+            {
+                LoadingHelper.Hide();
+            }
         }
 
         private void TreeList_DoubleClick(object sender, EventArgs e)
@@ -172,7 +199,12 @@ namespace ProjectEnc
             if (hitInfo.Node != null)
             {
                 string dirName = hitInfo.Node.GetValue(0).ToString();
-                this.project = FileHelper.Deserialize<Project>(Path.Combine(this.ProjectPath, dirName, "工程.project"));
+                this.project = ProjectSerializer.Load(Path.Combine(this.ProjectPath, dirName, "工程.project"));
+                if (this.project == null)
+                {
+                    MsgHelper.Error("工程文件不存在或已损坏，无法打开。");
+                    return;
+                }
                 string file = this.project.ExeFile;
                 if (!File.Exists(file))
                 {
@@ -181,8 +213,14 @@ namespace ProjectEnc
                 }
 
                 LoadingHelper.Show();
-                this.OpenProject();
-                LoadingHelper.Hide();
+                try
+                {
+                    this.OpenProject();
+                }
+                finally
+                {
+                    LoadingHelper.Hide();
+                }
             }
         }
 

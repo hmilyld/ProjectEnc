@@ -116,24 +116,28 @@ namespace ProjectEnc.Control
             string installPath = this.InstallPathTxt.Text;
             string passwd = this.passwdTxt.Text;
 
-            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(exePath) && !string.IsNullOrEmpty(installPath))
-            {
-                Project project = new Project()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = name,
-                    RootPath = path,
-                    ExeFile = exePath,
-                    PackagePath = installPath,
-                    Password = passwd
-                };
-                return project;
-            }
-            else
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path) || string.IsNullOrEmpty(exePath) || string.IsNullOrEmpty(installPath))
             {
                 MsgHelper.Error("请确认路径是否填写完整");
                 return null;
             }
+
+            string nameError;
+            if (!Project.IsValidName(name, out nameError))
+            {
+                MsgHelper.Error(nameError);
+                return null;
+            }
+
+            return new Project()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = name,
+                RootPath = path,
+                ExeFile = exePath,
+                PackagePath = installPath,
+                Password = passwd
+            };
         }
 
         private string ShowFoler()
