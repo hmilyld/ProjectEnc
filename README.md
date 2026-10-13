@@ -1,3 +1,5 @@
+请注意：本仓库已经不再维护，同类型工具请使用：[https://github.com/hmilyld/sealpack](https://github.com/hmilyld/sealpack)
+
 # C#程序合并、加密及打包专用工具
 
 # 缘起
